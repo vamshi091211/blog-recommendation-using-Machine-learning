@@ -94,3 +94,10 @@ user_ratings.head()
 user_ratings=user_ratings.fillna(0)
 item_similarity_df=user_ratings.corr(method='pearson')
 item_similarity_df.head(3)
+def get_similar_posts(post_category):
+  similar_score=item_similarity_df[post_category]
+  similar_score=similar_score.sort_values(ascending=False)
+  #print(merged_df[merged_df['new_category']==post_category]['title'].values[0])
+  return similar_score
+
+#print(get_similar_posts('Computer Technology'))
