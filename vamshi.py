@@ -61,5 +61,25 @@ for post in sorted_similar_posts:
   i=i+1
   if i>50:
     break
-
+post_info['category'].unique
+post_info['new_category'] = [x.split('|')[0] for x in post_info['category']]
+post_info['new_category'] = [x.split(';')[0] for x in post_info['new_category']]
+post_info = post_info[post_info.new_category != '']
+post_info['new_category'].replace({'ViDEO':'Video'},inplace=True)
+post_info['new_category'].nunique()
+df=pd.DataFrame(post_info['new_category'])
+df
+post_info=post_info.drop(['category'],axis=1)
+post_info.columns
+new_post_info=post_info.rename(columns = {'_id':'post_id'})
+new_post_info.head()
+merged_df=pd.merge(new_post_info,user_and_post_info).drop(['timestamp','combined_features','index'],axis=1)
+merged_df.shape
+merged_df['rating']=1
+merged_df
+user_ratings=merged_df.pivot_table(index=['user_id'],columns=['new_category'],values='rating')
+user_ratings.head()
+user_ratings=user_ratings.fillna(0)
+item_similarity_df=user_ratings.corr(method='pearson')
+item_similarity_df.head(3)
 
