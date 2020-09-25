@@ -97,17 +97,13 @@ item_similarity_df.head(3)
 def get_similar_posts(post_category):
   similar_score=item_similarity_df[post_category]
   similar_score=similar_score.sort_values(ascending=False)
-  #print(merged_df[merged_df['new_category']==post_category]['title'].values[0])
   return similar_score
-#print(get_similar_posts('Computer Technology'))
 photo_lover=['Faith in yourself','Keep working hard !!']
 def get_category_from_title(title):
   return merged_df[merged_df['title']==title]['new_category'].values[0]
 similar_post=pd.DataFrame()
 for post_name in photo_lover:
   similar_post=similar_post.append(get_similar_posts(get_category_from_title(post_name)),ignore_index=True)
-  #pd.set_option('display.max_rows', similar_post.shape[0]+1)
-#pd.set_option('display.max_rows', df1.shape[0]+1)
 df1=similar_post.sum().sort_values(ascending=False)
 pd.set_option('display.max_rows', df1.shape[0]+1)
 print(df1)
@@ -118,9 +114,9 @@ modified=df2.reset_index()
 modified.columns
 modified.rename(columns={'index':'Category'},inplace=True)
 modified.columns
-modified.head(3)res=[]
+modified.head(3)
+res=[]
 for x in modified['Category']:
-  #if merged_df['new_category']==x:
   res.append(merged_df.loc[merged_df['new_category']==x,['title']].values[0])
 modified['Title']=np.array(res)
 modified.head(3)
