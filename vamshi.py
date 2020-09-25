@@ -1,10 +1,16 @@
+# IMPORTING LIBRARIES
+
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer 
-from sklearn.metrics.pairwise import cosine_similarity  
-user_info=pd.read_csv("user.csv",encoding='ISO-8859-1')
-user_and_post_info=pd.read_csv("view.csv")
-post_info=pd.read_csv("post.csv")
+from sklearn.metrics.pairwise import cosine_similarity
+
+# LOADING DATA
+
+user_info = pd.read_csv("user.csv", encoding = 'ISO-8859-1')
+user_and_post_info = pd.read_csv("view.csv")
+post_info = pd.read_csv("post.csv")
+
 user_info.shape
 user_info.head()
 user_info.describe()
