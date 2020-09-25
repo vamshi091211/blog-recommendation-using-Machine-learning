@@ -63,11 +63,11 @@ post_user_likes = get_title_from_post_id(Id_of_post_user_likes)
 post_index = get_index_from_title(post_user_likes)
 
 similar_posts = list(enumerate(cosine_sim[post_index]))
-sorted_similar_posts = sorted(similar_posts,key=lambda x:x[1],reverse=True)
+sorted_similar_posts = sorted(similar_posts, key = lambda x: x[1], reverse=True)
 
-i=0
+i = 0
 for post in sorted_similar_posts:
     print(get_title_from_index(post[0]))
-    i=i+1
-    if i>50:
+    i = i + 1
+    if i > 50:
         break
