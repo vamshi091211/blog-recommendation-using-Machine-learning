@@ -1,3 +1,5 @@
+#CONTENT-BASED FILTERING
+
 # IMPORTING LIBRARIES
 
 import pandas as pd
@@ -67,6 +69,10 @@ for post in sorted_similar_posts:
     i=i+1
     if i>50:
         break
+        
+        
+#COLLABORATIVE FILTERING
+
 post_info['category'].unique
 post_info['new_category'] = [x.split('|')[0] for x in post_info['category']]
 post_info['new_category'] = [x.split(';')[0] for x in post_info['new_category']]
