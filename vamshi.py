@@ -14,7 +14,7 @@ user_and_post_info = pd.read_csv("view.csv")
 post_info = pd.read_csv("post.csv")
 
 user_info.shape
-user_info.head()
+user_info.head()    
 user_info.describe()
 user_info.columns
 df=user_info.loc[(user_info['gender']!='male')& (user_info['gender']!='female')]
