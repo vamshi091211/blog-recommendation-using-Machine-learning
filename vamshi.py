@@ -26,12 +26,12 @@ post_info['_id']=post_info['_id'].astype(str)
 post_info.dtypes
 features=['title','category',' post_type']
 for feature in features:
-  post_info[feature]=post_info[feature].fillna("")
+    post_info[feature]=post_info[feature].fillna("")
 def combine_features(row):
-  try:
-    return row['title']+" "+row['category']+" "+row[' post_type']
-  except:
-    print ("Error:",row)
+    try:
+        return row['title']+" "+row['category']+" "+row[' post_type']
+    except:
+        print ("Error:",row)
 
 
 post_info["combined_features"]=post_info.apply(combine_features,axis=1)
@@ -40,13 +40,13 @@ cv=CountVectorizer()
 count_matrix=cv.fit_transform(post_info["combined_features"])
 cosine_sim=cosine_similarity(count_matrix)
 def get_index_from_title(title):
-  return post_info[post_info['title']==title]['index'].values[0]
+    return post_info[post_info['title']==title]['index'].values[0]
 def get_title_from_index(index):
-  return post_info[post_info['index']==index]['title'].values[0]
+    return post_info[post_info['index']==index]['title'].values[0]
 def get_post_id_from_user_id(userid):
-  return user_and_post_info[user_and_post_info['user_id']==userid]['post_id'].values[0]
+    return user_and_post_info[user_and_post_info['user_id']==userid]['post_id'].values[0]
 def get_title_from_post_id(postid):
-  return post_info[post_info['_id']==postid]['title'].values[0]
+    return post_info[post_info['_id']==postid]['title'].values[0]
 #post_user_likes='MIS'
 Id_of_user='5e5dfbbefbc8805f69e02c91'
 Id_of_post_user_likes=get_post_id_from_user_id(Id_of_user)
@@ -57,10 +57,10 @@ similar_posts=list(enumerate(cosine_sim[post_index]))
 sorted_similar_posts=sorted(similar_posts,key=lambda x:x[1],reverse=True)
 i=0
 for post in sorted_similar_posts:
-  print(get_title_from_index(post[0]))
-  i=i+1
-  if i>50:
-    break
+    print(get_title_from_index(post[0]))
+    i=i+1
+    if i>50:
+        break
 post_info['category'].unique
 post_info['new_category'] = [x.split('|')[0] for x in post_info['category']]
 post_info['new_category'] = [x.split(';')[0] for x in post_info['new_category']]
@@ -82,4 +82,3 @@ user_ratings.head()
 user_ratings=user_ratings.fillna(0)
 item_similarity_df=user_ratings.corr(method='pearson')
 item_similarity_df.head(3)
-
