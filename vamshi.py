@@ -67,7 +67,7 @@ i=0
 for post in sorted_similar_posts:
     print(get_title_from_index(post[0]))
     i=i+1
-    if i>50:
+    if i>20:
         break
         
       
