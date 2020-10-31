@@ -6,6 +6,7 @@ class User:
         self.visited = [0]*500
         self.nextrecomm = []
         self.lastpost = None
+        self.stop = False
         
     def findInterests(self, unique_tags):
         k = 0
@@ -29,14 +30,31 @@ class User:
             print(index, name)
             
     def selectPost(self):
-        print("please select a post number")
+        recomindex = []
+        for x in self.nextrecomm:
+            recomindex.append(x[1])
+            
+        print("please select a post number from the list")
         n = int(input())
+        if n == -1:
+            print("Thank You")
+            self.stop = True
+            return -1
+        if n not in recomindex:
+            print("select again")
+            self.selectPost()
+            return 0
+        
         self.lastpost = n
+        self.visited[n] = 1
         for i in range(len(self.nextrecomm)):
             if (self.nextrecomm[i][1] == n):
                 garbage = self.nextrecomm.pop(i)
                 break
         print("\n")
+        
+    def resetrecomm(self):
+        self.nextrecomm = []
         
 import pandas as pd
 import numpy as np
@@ -127,6 +145,9 @@ def get_category_from_title(title):
     return merged_df[merged_df['title']==title]['new_category'].values[0]
 
 def knowledgeBasedRecommendation(user):
+    if len(user.nextrecomm) > 2:
+        _ = user.nextrecomm.pop(0)
+        _ = user.nextrecomm.pop(0)
     target = " ".join(user.interests)
     candidates = list(post_info["category"])
     vec = CountVectorizer()
@@ -138,14 +159,17 @@ def knowledgeBasedRecommendation(user):
     similarity_pair.sort(reverse = True)
     i = 0
     for first, second in similarity_pair:
-        if(len(user.nextrecomm) == 4):
+        if(len(user.nextrecomm) == 4 or len(user.nextrecomm) >= 10):
             break
-        if (get_title_from_index(second), second) not in user.nextrecomm:
+        if (get_title_from_index(second), second) not in user.nextrecomm and user.visited[second] == 0:
             user.nextrecomm.append((get_title_from_index(second), second))
         i+=1
         
         
 def contentBasedRecommendation(user):
+    if len(user.nextrecomm) > 2:
+        _ = user.nextrecomm.pop(0)
+        _ = user.nextrecomm.pop(0)  
     post_index = user.lastpost
     # Passing the post_index to cosine_sim to make a list of similar posts
     similar_posts = list(enumerate(cosine_sim[post_index]))
@@ -154,11 +178,12 @@ def contentBasedRecommendation(user):
     temp = sorted_similar_posts.pop(0)
     i = 0
     for post in sorted_similar_posts:
-        if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm:
+        if len(user.nextrecomm) == 7 or len(user.nextrecomm) >= 10:
+            break
+        if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
             user.nextrecomm.append((get_title_from_index(post[0]), post[0]))
         i = i + 1
-        if len(user.nextrecomm) == 7:
-            break
+        
             
 def collabrativeRecommendation(user):
     photo_lover=['Faith in yourself','Keep working hard !!']
@@ -182,10 +207,16 @@ def main():
     Me.findInterests(unique_tags)
     knowledgeBasedRecommendation(Me)
     Me.showRecomm()
-    Me.selectPost()
-    contentBasedRecommendation(Me)
     
-    Me.showRecomm()
-    
+    while(True):
+        
+        Me.selectPost()
+        if Me.stop == True:
+            break
+        Me.resetrecomm()
+        contentBasedRecommendation(Me)
+        knowledgeBasedRecommendation(Me)
+        Me.showRecomm()
+            
 if __name__ == "__main__":
     main()    
