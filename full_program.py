@@ -1,14 +1,15 @@
 class User:
     
-    def __init__(self, user_id):
+    def __init__(self, user_id):                                  # Constructor
         self.userid = user_id
+        self.personType = None
         self.interests = []
         self.visited = [0]*500
-        self.nextrecomm = [None]*12
+        self.nextrecomm = [None]*15
         self.lastpost = None
         self.stop = False
         
-    def findInterests(self, unique_tags):
+    def findInterests(self, unique_tags):                         # Function to display and get tags as per user interest
         k = 0
         for i in range(79):
             for j in range(3):
@@ -24,15 +25,15 @@ class User:
                 break
             self.interests.append(i)
             
-    def showRecomm(self):
+    def showRecomm(self):                                        # Function to display Recommendations
 
         for i in range(len(self.nextrecomm)):
             '''
             if (i == 0):
                 print("\nKNOWLEDGE BASED\n")
-            elif(i == 3):
+            elif(i == 5):
                 print("\nCONTENT BASED\n")
-            elif(i == 7):
+            elif(i == 10):
                 print("\nCOLLABRATIVE BASED\n")
             '''
             if (self.nextrecomm[i] != None):
@@ -65,7 +66,7 @@ class User:
         print("\n")
         
     def resetrecomm(self):
-        self.nextrecomm = [None]*10
+        self.nextrecomm = [None]*15
         
 import pandas as pd
 import numpy as np
@@ -73,16 +74,18 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import pairwise_kernels
 
+# Loading Data into DataFrame
 user_info = pd.read_csv("user.csv", engine = "python")
 user_and_post_info = pd.read_csv("view.csv")
 post_info = pd.read_csv("post.csv")
 
-# Adding extra index column (to be used later)
+# DATA PREPROCESSING
+
 post_info.insert(0, 'index', range(0, len(post_info)))
-# Converting ids to string data type
 post_info['_id'] = post_info['_id'].astype(str)
-# Removing NaN columns (Unnamed)
 post_info.drop(['Unnamed: '+str(x) for x in range(4, 10)], axis = 1, inplace = True)
+
+# FINDING ALL UNIQUE TAGS (FOR KNOWLEDGE-BASED FILTERING)
 
 for i in range(len(post_info['category'])):
     temp = post_info['category'][i]
@@ -95,16 +98,16 @@ for i in range(len(post_info['category'])):
         while(temp[j] == " "):
             temp = temp[1:]
         post_info['category'][i] = temp
-
 unique_tags = []
 for x in post_info['category']:
     x = x.lower()
     tags = x.split("|")
     unique_tags += tags
-    
 unique_tags = list(set(unique_tags))
 
-## MAKING BAG OF WORDS
+# PREPROCESSING FOR CONTENT BASED FILTERING
+
+## Making Bag of Words
 post_info_cols = list(post_info.columns)
 post_info_cols = post_info_cols[2:]
 for feature in post_info_cols:
@@ -114,21 +117,22 @@ def combine_features(row):
         return row['title'] + " " + row['category'] + " "+ row[' post_type']
     except:
         print ("Error:",row)
-# New Column having concatenated data of all columns (except '_id')
-post_info["combined_features"] = post_info.apply(combine_features, axis = 1)
-post_info["combined_features"]
+post_info["combined_features"] = post_info.apply(combine_features, axis = 1)       # New Column having concatenated data of all columns (except '_id')
 
 ## Finding Similarity Between Post Using Bag of Words (For Content Based Filtering)
 cv = CountVectorizer()
 count_matrix = cv.fit_transform(post_info["combined_features"])
-cosine_sim = cosine_similarity(count_matrix)
+cosine_sim = cosine_similarity(count_matrix)                                       # Similarity Matrix
 
-# FOR COLLABRATIVE FILTERING
+# PREPROCESSING FOR COLLABRATIVE FILTERING
+
+## Filling missing values
 user_info.iloc[67]["gender"] = "female"
 user_info.iloc[67]["academics"] = "undergraduate"
 user_info.iloc[74]["gender"] = "female"
 user_info.iloc[74]["academics"] = "undergraduate"
 
+## Counting likes on Posts by each type of user
 from collections import defaultdict
 user_info["person_type"] = user_info["gender"] + " " + user_info["academics"]
 from sklearn.preprocessing import LabelEncoder
@@ -141,7 +145,8 @@ for i in range(len(user_and_post_info)):
         post_likes[user_and_post_info.iloc[i]["post_id"]] = [0, 0, 0, 0]
     j = user_info[user_info["_id"] == user_and_post_info.iloc[i]["user_id"]]["person_type"]
     post_likes[user_and_post_info.iloc[i]["post_id"]][int(j)] += 1
-    
+
+## Sorting on the basis of number of likes
 total_likes = []
 likes_0 = []
 likes_1 = []
@@ -161,7 +166,8 @@ likes_2.sort(reverse = True)
 likes_3.sort(reverse = True)
 likes_all = {0:likes_0, 1:likes_1, 2:likes_2, 3:likes_3}
 
-# Defining Utility Functions
+# DEFINING UTILITY FUNCTIONS
+
 def get_index_from_title(title):
     return post_info[post_info['title'] == title]['index'].values[0]
 
@@ -177,7 +183,9 @@ def get_title_from_post_id(postid):
 def get_category_from_title(title):
     return merged_df[merged_df['title']==title]['new_category'].values[0]
 
-def knowledgeBasedRecommendation(user):
+def knowledgeBasedRecommendation(user):                                   # Function to make knowledge based recommendations
+    for i in range(0, 5):
+        user.nextrecomm[i] = None
     target = " ".join(user.interests)
     candidates = list(post_info["category"])
     vec = CountVectorizer()
@@ -188,7 +196,7 @@ def knowledgeBasedRecommendation(user):
         similarity_pair.append((cos_sim[0][i], i))
     similarity_pair.sort(reverse = True)
     
-    for i in range(0, 3):
+    for i in range(0, 5):
         if user.nextrecomm[i] == None:
             for first, second in similarity_pair:
                 if (get_title_from_index(second), second) not in user.nextrecomm and user.visited[second] == 0:
@@ -196,16 +204,17 @@ def knowledgeBasedRecommendation(user):
                     break
         
         
-def contentBasedRecommendation(user):
-    for i in range(3, 7):
+def contentBasedRecommendation(user):                                   # Function to make content based recommendations
+    
+    for i in range(5, 10):
         user.nextrecomm[i] = None
+        
     post_index = user.lastpost
-    # Passing the post_index to cosine_sim to make a list of similar posts
     similar_posts = list(enumerate(cosine_sim[post_index]))
-    # Sorting the list in decreasing order of their similarity
     sorted_similar_posts = sorted(similar_posts, key = lambda x:x[1], reverse=True)
-    temp = sorted_similar_posts.pop(0)
-    for i in range(3, 7):
+    temp = sorted_similar_posts.pop(0)                                  # Most similar post is the same post
+    
+    for i in range(5, 10):
         if (user.nextrecomm[i] == None):
             for post in sorted_similar_posts:
                 if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
@@ -213,19 +222,23 @@ def contentBasedRecommendation(user):
                     break
         
             
-def collabrativeRecommendation(user):
+def collabrativeRecommendation(user)                                    # Function to make collabrative filtering based recommendations
+    
+    for i in range(10, 15):
+        user.nextrecomm[i] = None
+    
     user_id = user.userid
-    p_type = user_info[user_info["_id"] == user_id]["person_type"]
+    p_type = user.personType
     lst = likes_all[int(p_type)]
     
-    for i in range(7, 10):
+    for i in range(10, 13):
         if (user.nextrecomm[i] == None):
             for post in lst:
                 if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
                     user.nextrecomm[i] = (get_title_from_index(post[0]), post[0])
                     break
     
-    for i in range(10, 12):
+    for i in range(13, 15):
         if (user.nextrecomm[i] == None):
             for post in total_likes:
                 if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
@@ -233,7 +246,11 @@ def collabrativeRecommendation(user):
                     break
 
 def main():
-    Me = User('5e5dfbbefbc8805f69e02c91')
+    name = input("Please Enter Your Name: ")
+    Me = User(name)
+    gender = input("Are you a male or a female? ")
+    acad = input("Are you an undergraduate or a graduate? ")
+    Me.personType = user_info[(user_info["gender"] == gender) & (user_info["academics"] == acad)]["person_type"].unique()[0]
     Me.findInterests(unique_tags)
     knowledgeBasedRecommendation(Me)
     Me.showRecomm()
