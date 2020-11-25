@@ -222,7 +222,7 @@ def contentBasedRecommendation(user):                                   # Functi
                     break
         
             
-def collabrativeRecommendation(user)                                    # Function to make collabrative filtering based recommendations
+def collabrativeRecommendation(user):                                    # Function to make collabrative filtering based recommendations
     
     for i in range(10, 15):
         user.nextrecomm[i] = None
