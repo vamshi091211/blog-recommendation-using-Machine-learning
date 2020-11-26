@@ -8,6 +8,7 @@ class User:
         self.nextrecomm = [None]*15
         self.lastpost = None
         self.stop = False
+        self.similr = [0]*15
         
     def findInterests(self, unique_tags):                         # Function to display and get tags as per user interest
         k = 0
@@ -37,8 +38,27 @@ class User:
                 print("\nCOLLABRATIVE BASED\n")
             '''
             if (self.nextrecomm[i] != None):
-                print(self.nextrecomm[i][1], self.nextrecomm[i][0])
-            
+                if (0 <= i <= 4):
+                    s = str(self.nextrecomm[i][1]) + " " + str(self.nextrecomm[i][0])
+                    t = "similarity with interests : " + str(self.similr[i])
+                    print(s.ljust(70), end="|")
+                    print(t)
+                elif(5 <= i <= 9):
+                    s = str(self.nextrecomm[i][1]) + " " + str(self.nextrecomm[i][0])
+                    t = "similarity with previous post : " + str(self.similr[i])
+                    print(s.ljust(70), end="|")
+                    print(t)
+                elif(10 <= i <= 12):
+                    s = str(self.nextrecomm[i][1]) + " " + str(self.nextrecomm[i][0])
+                    t = "likes by same group : " + str(self.similr[i])
+                    print(s.ljust(70), end="|")
+                    print(t)
+                else:
+                    s = str(self.nextrecomm[i][1]) + " " + str(self.nextrecomm[i][0])
+                    t = "likes by all groups : " + str(self.similr[i])
+                    print(s.ljust(70), end="|")
+                    print(t)
+    
     def selectPost(self):
         recomindex = []
         for x in self.nextrecomm:
@@ -70,6 +90,9 @@ class User:
         
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import pairwise_kernels
@@ -183,6 +206,9 @@ def get_title_from_post_id(postid):
 def get_category_from_title(title):
     return merged_df[merged_df['title']==title]['new_category'].values[0]
 
+def get_index_from_post_id(postid):
+    return post_info[post_info["_id"] == postid]["index"].values[0]
+
 def knowledgeBasedRecommendation(user):                                   # Function to make knowledge based recommendations
     for i in range(0, 5):
         user.nextrecomm[i] = None
@@ -201,6 +227,7 @@ def knowledgeBasedRecommendation(user):                                   # Func
             for first, second in similarity_pair:
                 if (get_title_from_index(second), second) not in user.nextrecomm and user.visited[second] == 0:
                     user.nextrecomm[i] = (get_title_from_index(second), second)
+                    user.similr[i] = first
                     break
         
         
@@ -219,6 +246,7 @@ def contentBasedRecommendation(user):                                   # Functi
             for post in sorted_similar_posts:
                 if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
                     user.nextrecomm[i] = (get_title_from_index(post[0]), post[0])
+                    user.similr[i] = post[1]
                     break
         
             
@@ -234,17 +262,19 @@ def collabrativeRecommendation(user):                                    # Funct
     for i in range(10, 13):
         if (user.nextrecomm[i] == None):
             for post in lst:
-                if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
-                    user.nextrecomm[i] = (get_title_from_index(post[0]), post[0])
+                if (get_title_from_post_id(post[1]), get_index_from_post_id(post[1])) not in user.nextrecomm and user.visited[get_index_from_post_id(post[1])] == 0:
+                    user.nextrecomm[i] = (get_title_from_post_id(post[1]), get_index_from_post_id(post[1]))
+                    user.similr[i] = post[0]
                     break
     
     for i in range(13, 15):
         if (user.nextrecomm[i] == None):
             for post in total_likes:
-                if (get_title_from_index(post[0]), post[0]) not in user.nextrecomm and user.visited[post[0]] == 0:
-                    user.nextrecomm[i] = (get_title_from_index(post[0]), post[0])
+                if (get_title_from_post_id(post[1]), get_index_from_post_id(post[1])) not in user.nextrecomm and user.visited[get_index_from_post_id(post[1])] == 0:
+                    user.nextrecomm[i] = (get_title_from_post_id(post[1]), get_index_from_post_id(post[1]))
+                    user.similr[i] = post[0]
                     break
-
+    
 def main():
     name = input("Please Enter Your Name: ")
     Me = User(name)
@@ -254,6 +284,7 @@ def main():
     Me.findInterests(unique_tags)
     knowledgeBasedRecommendation(Me)
     Me.showRecomm()
+
     
     while(True):
         
